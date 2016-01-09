@@ -51,6 +51,12 @@ macro dispatchAfterCall()
     dispatch(CallOpCodeSize)
 end
 
+macro m_interrupt()
+  emit "movq $60, %rax"
+  emit "movq $0, %rdi"
+  emit "syscall"
+end
+
 macro cCall2(function)
     checkStackPointerAlignment(t4, 0xbad0c002)
     if X86_64 or ARM64
@@ -89,9 +95,9 @@ macro cCall2Void(function)
         # On Win64, rcx and rdx are used for passing the first two parameters.
         # We also need to make room on the stack for all four parameter registers.
         # See http://msdn.microsoft.com/en-us/library/ms235286.aspx
-        subp 32, sp 
+        subp 32, sp
         call function
-        addp 32, sp 
+        addp 32, sp
     else
         cCall2(function)
     end
@@ -400,7 +406,7 @@ end
 macro writeBarrierOnOperand(cellOperand)
     loadisFromInstruction(cellOperand, t1)
     loadConstantOrVariableCell(t1, t2, .writeBarrierDone)
-    skipIfIsRememberedOrInEden(t2, t1, t3, 
+    skipIfIsRememberedOrInEden(t2, t1, t3,
         macro(cellState)
             btbnz cellState, .writeBarrierDone
             push PB, PC
@@ -663,6 +669,7 @@ _llint_op_mov:
     loadisFromInstruction(2, t1)
     loadisFromInstruction(1, t0)
     loadConstantOrVariable(t1, t2)
+    #m_interrupt()
     storeq t2, [cfr, t0, 8]
     dispatch(3)
 
@@ -1100,7 +1107,7 @@ _llint_op_instanceof:
     bbb JSCell::m_type[t1], ObjectType, .opInstanceofSlow
     loadisFromInstruction(2, t0)
     loadConstantOrVariableCell(t0, t2, .opInstanceofSlow)
-    
+
     # Register state: t1 = prototype, t2 = value
     move 1, t0
 .opInstanceofLoop:
@@ -1365,7 +1372,7 @@ _llint_op_put_by_id:
 
 .opPutByIdDoneCheckingTypes:
     loadisFromInstruction(6, t1)
-    
+
     btiz t1, .opPutByIdNotTransition
 
     # This is the transition case. t1 holds the new structureID. t2 holds the old structure ID.
@@ -1444,7 +1451,7 @@ _llint_op_get_by_val:
     fd2q ft0, t2
     subq tagTypeNumber, t2
     jmp .opGetByValDone
-    
+
 .opGetByValNotDouble:
     subi ArrayStorageShape, t2
     bia t2, SlowPutArrayStorageShape - ArrayStorageShape, .opGetByValSlow
@@ -1605,7 +1612,7 @@ end
 _llint_op_jeq_null:
     traceExecution()
     equalNull(
-        macro (structure, value, target) 
+        macro (structure, value, target)
             btbz value, MasqueradesAsUndefined, .notMasqueradesAsUndefined
             loadp CodeBlock[cfr], t0
             loadp CodeBlock::m_globalObject[t0], t0
@@ -1618,7 +1625,7 @@ _llint_op_jeq_null:
 _llint_op_jneq_null:
     traceExecution()
     equalNull(
-        macro (structure, value, target) 
+        macro (structure, value, target)
             btbz value, MasqueradesAsUndefined, target
             loadp CodeBlock[cfr], t0
             loadp CodeBlock::m_globalObject[t0], t0
@@ -1952,7 +1959,7 @@ end
 _llint_op_resolve_scope:
     traceExecution()
     loadisFromInstruction(4, t0)
-
+    #m_interrupt()
 #rGlobalProperty:
     bineq t0, GlobalProperty, .rGlobalVar
     getConstantScope(1)
@@ -2170,6 +2177,7 @@ _llint_op_put_to_scope:
 
 .pGlobalVar:
     bineq t0, GlobalVar, .pGlobalLexicalVar
+
     writeBarrierOnGlobalObject(3)
     putGlobalVariable()
     dispatch(7)
@@ -2224,6 +2232,7 @@ _llint_op_put_to_scope:
     dispatch(7)
 
 .pDynamic:
+    #m_interrupt()
     callSlowPath(_llint_slow_path_put_to_scope)
     dispatch(7)
 
@@ -2275,7 +2284,7 @@ _llint_op_profile_type:
     bqeq t0, ValueEmpty, .opProfileTypeDone
     # Store the JSValue onto the log entry.
     storeq t0, TypeProfilerLog::LogEntry::value[t2]
-    
+
     # Store the TypeLocation onto the log entry.
     loadpFromInstruction(2, t3)
     storep t3, TypeProfilerLog::LogEntry::location[t2]
@@ -2287,7 +2296,7 @@ _llint_op_profile_type:
     loadi JSCell::m_structureID[t0], t3
     storei t3, TypeProfilerLog::LogEntry::structureID[t2]
 .opProfileTypeSkipIsCell:
-    
+
     # Increment the current log entry.
     addp sizeof TypeProfilerLog::LogEntry, t2
     storep t2, TypeProfilerLog::m_currentLogEntryPtr[t1]

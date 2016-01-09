@@ -20,7 +20,7 @@
  * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "config.h"
@@ -77,6 +77,8 @@ JSValue JITCode::execute(VM* vm, ProtoCallFrame* protoCallFrame)
         entryAddress = executableAddress();
     } else
         entryAddress = addressForCall(MustCheckArity).executableAddress();
+
+    printf("entryAddress: %p(JitCODE.cpp)\n", entryAddress);    
     JSValue result = JSValue::decode(vmEntryToJavaScript(entryAddress, vm, protoCallFrame));
     return vm->exception() ? jsNull() : result;
 }
@@ -235,4 +237,3 @@ void printInternal(PrintStream& out, JSC::JITCode::JITType type)
 }
 
 } // namespace WTF
-

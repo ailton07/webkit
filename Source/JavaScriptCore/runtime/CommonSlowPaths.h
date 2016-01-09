@@ -20,7 +20,7 @@
  * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #ifndef CommonSlowPaths_h
@@ -57,7 +57,7 @@ ALWAYS_INLINE int arityCheckFor(ExecState* exec, JSStack* stack, CodeSpecializat
     ASSERT(!callee->isHostFunction());
     CodeBlock* newCodeBlock = callee->jsExecutable()->codeBlockFor(kind);
     int argumentCountIncludingThis = exec->argumentCountIncludingThis();
-    
+
     ASSERT(argumentCountIncludingThis < newCodeBlock->numParameters());
     int frameSize = argumentCountIncludingThis + JSStack::CallFrameHeaderSize;
     int alignedFrameSizeForParameters = WTF::roundUpToMultipleOf(stackAlignmentRegisters(),
@@ -94,7 +94,7 @@ inline void tryCachePutToScopeGlobal(
 {
     // Covers implicit globals. Since they don't exist until they first execute, we didn't know how to cache them at compile time.
     ResolveType resolveType = getPutInfo.resolveType();
-    if (resolveType != GlobalProperty && resolveType != GlobalPropertyWithVarInjectionChecks 
+    if (resolveType != GlobalProperty && resolveType != GlobalPropertyWithVarInjectionChecks
         && resolveType != UnresolvedProperty && resolveType != UnresolvedPropertyWithVarInjectionChecks)
         return;
 
@@ -113,19 +113,19 @@ inline void tryCachePutToScopeGlobal(
             pc[4].u.operand = getPutInfo.operand();
         }
     }
-    
+
     if (resolveType == GlobalProperty || resolveType == GlobalPropertyWithVarInjectionChecks) {
         if (!slot.isCacheablePut()
             || slot.base() != scope
             || !scope->structure()->propertyAccessesAreCacheable())
             return;
-        
+
         if (slot.type() == PutPropertySlot::NewProperty) {
             // Don't cache if we've done a transition. We want to detect the first replace so that we
             // can invalidate the watchpoint.
             return;
         }
-        
+
         scope->structure()->didCachePropertyReplacement(exec->vm(), slot.cachedOffset());
 
         ConcurrentJITLocker locker(codeBlock->m_lock);
@@ -225,15 +225,15 @@ inline void decodeResult(SlowPathReturnType result, void*& a, void*& b)
     b = u.pair.b;
 }
 #endif // USE(JSVALUE32_64)
-    
+
 #define SLOW_PATH
-    
+
 #define SLOW_PATH_DECL(name) \
 extern "C" SlowPathReturnType SLOW_PATH name(ExecState* exec, Instruction* pc)
-    
+
 #define SLOW_PATH_HIDDEN_DECL(name) \
 SLOW_PATH_DECL(name) WTF_INTERNAL
-    
+
 SLOW_PATH_HIDDEN_DECL(slow_path_call_arityCheck);
 SLOW_PATH_HIDDEN_DECL(slow_path_construct_arityCheck);
 SLOW_PATH_HIDDEN_DECL(slow_path_create_direct_arguments);

@@ -20,7 +20,7 @@
  * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "config.h"
@@ -537,11 +537,11 @@ SLOW_PATH_DECL(slow_path_del_by_val)
     BEGIN();
     JSValue baseValue = OP_C(2).jsValue();
     JSObject* baseObject = baseValue.toObject(exec);
-    
+
     JSValue subscript = OP_C(3).jsValue();
-    
+
     bool couldDelete;
-    
+
     uint32_t i;
     if (subscript.getUInt32(i))
         couldDelete = baseObject->methodTable()->deletePropertyByIndex(baseObject, exec, i);
@@ -551,10 +551,10 @@ SLOW_PATH_DECL(slow_path_del_by_val)
         CHECK_EXCEPTION();
         couldDelete = baseObject->methodTable()->deleteProperty(baseObject, exec, property);
     }
-    
+
     if (!couldDelete && exec->codeBlock()->isStrictMode())
         THROW(createTypeError(exec, "Unable to delete property."));
-    
+
     RETURN(jsBoolean(couldDelete));
 }
 
@@ -755,6 +755,7 @@ SLOW_PATH_DECL(slow_path_resolve_scope)
     JSValue resolvedScope = JSScope::resolve(exec, scope, ident);
 
     ResolveType resolveType = static_cast<ResolveType>(pc[4].u.operand);
+    printf("Resolve scope: %p [%s] (CommonSlowPaths.cpp) isObject ? %x\n",pc, ident.ascii().data(), resolvedScope.isObject());
 
     // ModuleVar does not keep the scope register value alive in DFG.
     ASSERT(resolveType != ModuleVar);
