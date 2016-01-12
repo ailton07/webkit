@@ -756,7 +756,7 @@ SLOW_PATH_DECL(slow_path_resolve_scope)
 
     ResolveType resolveType = static_cast<ResolveType>(pc[4].u.operand);
     printf("Resolve scope: %p [%s] (CommonSlowPaths.cpp) isObject ? %x\n",pc, ident.ascii().data(), resolvedScope.isObject());
-
+    resolvedScope.setTaint(0);
     // ModuleVar does not keep the scope register value alive in DFG.
     ASSERT(resolveType != ModuleVar);
 

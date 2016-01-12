@@ -78,7 +78,7 @@ JSValue JITCode::execute(VM* vm, ProtoCallFrame* protoCallFrame)
     } else
         entryAddress = addressForCall(MustCheckArity).executableAddress();
 
-    printf("entryAddress: %p(JitCODE.cpp)\n", entryAddress);    
+    printf("entryAddress: %p(JitCODE.cpp) JSValue --> %ld\n", entryAddress, sizeof(JSValue));    
     JSValue result = JSValue::decode(vmEntryToJavaScript(entryAddress, vm, protoCallFrame));
     return vm->exception() ? jsNull() : result;
 }

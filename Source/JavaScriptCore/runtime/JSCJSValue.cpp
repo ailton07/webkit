@@ -173,7 +173,7 @@ void JSValue::putToPrimitive(ExecState* exec, PropertyName propertyName, JSValue
                 return;
             }
 
-            // If there's an existing property on the object or one of its 
+            // If there's an existing property on the object or one of its
             // prototypes it should be replaced, so break here.
             break;
         }
@@ -182,7 +182,7 @@ void JSValue::putToPrimitive(ExecState* exec, PropertyName propertyName, JSValue
         if (prototype.isNull())
             break;
     }
-    
+
     if (slot.isStrictMode())
         throwTypeError(exec, StrictModeReadonlyPropertyWriteError);
     return;
@@ -195,10 +195,10 @@ void JSValue::putToPrimitiveByIndex(ExecState* exec, unsigned propertyName, JSVa
         putToPrimitive(exec, Identifier::from(exec, propertyName), value, slot);
         return;
     }
-    
+
     if (synthesizePrototype(exec)->attemptToInterceptPutByIndexOnHoleForPrototype(exec, *this, propertyName, value, shouldThrow))
         return;
-    
+
     if (shouldThrow)
         throwTypeError(exec, StrictModeReadonlyPropertyWriteError);
 }
@@ -327,7 +327,7 @@ int32_t toInt32(double number)
     // after rounding; if the exponent is > 83 then no bits of precision can be
     // left in the low 32-bit range of the result (IEEE-754 doubles have 52 bits
     // of fractional precision).
-    // Note this case handles 0, -0, and all infinte, NaN, & denormal value. 
+    // Note this case handles 0, -0, and all infinte, NaN, & denormal value.
     if (exp < 0 || exp > 83)
         return 0;
 
@@ -410,6 +410,15 @@ String JSValue::toWTFStringSlowCase(ExecState* exec) const
     if (isUndefined())
         return vm.propertyNames->undefinedKeyword.string();
     return toString(exec)->value(exec);
+}
+
+//taint methods
+void JSValue::setTaint(uint16_t tag){
+    m_tag = tag;
+}
+
+uint16_t JSValue::getTaint(){
+    return m_tag;
 }
 
 } // namespace JSC

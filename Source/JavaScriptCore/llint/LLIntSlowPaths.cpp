@@ -1436,7 +1436,7 @@ LLINT_SLOW_PATH_DECL(slow_path_get_from_scope)
     if (!result)
         result = slot.getValue(exec, ident);
 
-    printf("is int? %d %d\n",result.isInt32(), result.asInt32());
+    printf("is int? %d Value : %d\n",result.isInt32(), result.asInt32());
     LLINT_RETURN(result);
 }
 
@@ -1449,7 +1449,10 @@ LLINT_SLOW_PATH_DECL(slow_path_put_to_scope)
     printf("put to scope: %p [%s] (LLIntSlowPaths.cpp) ", pc, ident.ascii().data());
     JSObject* scope = jsCast<JSObject*>(LLINT_OP(1).jsValue());
     JSValue value = LLINT_OP_C(3).jsValue();
-    printf("isInt? %d \n", value.isInt32());
+    if(value.isInt32() && value.asInt32() == 2){
+      value.setTaint(1);
+    }
+    printf("isInt? %d Value : %d Taint : %d\n", value.isInt32(), value.asInt32(), value.getTaint());
     GetPutInfo getPutInfo = GetPutInfo(pc[4].u.operand);
     if (getPutInfo.resolveType() == LocalClosureVar) {
         JSLexicalEnvironment* environment = jsCast<JSLexicalEnvironment*>(scope);

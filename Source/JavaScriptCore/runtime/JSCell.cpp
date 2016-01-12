@@ -33,7 +33,7 @@
 
 namespace JSC {
 
-COMPILE_ASSERT(sizeof(JSCell) == sizeof(uint64_t), jscell_is_eight_bytes);
+//COMPILE_ASSERT(sizeof(JSCell) < sizeof(uint64_t) , jscell_is_eigth_bytes);
 STATIC_ASSERT_IS_TRIVIALLY_DESTRUCTIBLE(JSCell);
 
 void JSCell::destroy(JSCell* cell)
@@ -153,7 +153,7 @@ bool JSCell::getPrimitiveNumber(ExecState* exec, double& number, JSValue& value)
 }
 
 double JSCell::toNumber(ExecState* exec) const
-{ 
+{
     if (isString())
         return static_cast<const JSString*>(this)->toNumber(exec);
     if (isSymbol())

@@ -77,7 +77,7 @@ enum PreferredPrimitiveType { NoPreference, PreferNumber, PreferString };
 enum ECMAMode { StrictMode, NotStrictMode };
 
 typedef int64_t EncodedJSValue;
-    
+
 union EncodedValueDescriptor {
     int64_t asInt64;
 #if USE(JSVALUE32_64)
@@ -85,7 +85,7 @@ union EncodedValueDescriptor {
 #elif USE(JSVALUE64)
     JSCell* ptr;
 #endif
-        
+
 #if CPU(BIG_ENDIAN)
     struct {
         int32_t tag;
@@ -213,7 +213,7 @@ public:
     double asDouble() const;
     bool asBoolean() const;
     double asNumber() const;
-    
+
     int32_t asInt32ForArithmetic() const; // Boolean becomes an int, but otherwise like asInt32().
 
     // Querying the type.
@@ -232,7 +232,7 @@ public:
     bool isCustomGetterSetter() const;
     bool isObject() const;
     bool inherits(const ClassInfo*) const;
-        
+
     // Extracting the value.
     bool getString(ExecState*, WTF::String&) const;
     WTF::String getString(ExecState*) const; // null string if not a string
@@ -240,7 +240,7 @@ public:
 
     // Extracting integer values.
     bool getUInt32(uint32_t&) const;
-        
+
     // Basic conversions.
     JSValue toPrimitive(ExecState*, PreferredPrimitiveType = NoPreference) const;
     bool getPrimitiveNumber(ExecState*, double& number, JSValue&);
@@ -311,10 +311,13 @@ public:
     static const unsigned numberOfInt52Bits = 52;
     static const int64_t notInt52 = static_cast<int64_t>(1) << numberOfInt52Bits;
     static const unsigned int52ShiftAmount = 12;
-    
+
     static ptrdiff_t offsetOfPayload() { return OBJECT_OFFSETOF(JSValue, u.asBits.payload); }
     static ptrdiff_t offsetOfTag() { return OBJECT_OFFSETOF(JSValue, u.asBits.tag); }
 
+    //taint functions
+    uint16_t getTaint();
+    void setTaint(uint16_t taint);
 #if USE(JSVALUE32_64)
     /*
      * On 32-bit platforms USE(JSVALUE32_64) should be defined, and we use a NaN-encoded
@@ -441,6 +444,7 @@ private:
     JS_EXPORT_PRIVATE JSValue toThisSlowCase(ExecState*, ECMAMode) const;
 
     EncodedValueDescriptor u;
+    uint16_t m_tag;
 };
 
 typedef IntHash<EncodedJSValue> EncodedJSValueHash;
