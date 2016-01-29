@@ -1430,14 +1430,17 @@ LLINT_SLOW_PATH_DECL(slow_path_get_from_scope)
         if (result == jsTDZValue())
             LLINT_THROW(createTDZError(exec));
     }
-
+    printf(" tag %x payload %x ", result.gettag(), result.getpayload());
+    printf("is int? %d\n",result.isInt32());
     CommonSlowPaths::tryCacheGetFromScopeGlobal(exec, vm, pc, scope, slot, ident);
 
     if (!result)
         result = slot.getValue(exec, ident);
 
-    printf("is int? %d Value : %d\n",result.isInt32(), result.asInt32());
+    printf("is int? %lx Value : %lx\n",result.gettag(), result.getpayload());
+    //printf("a: %d\n", pc[0].u.operand);
     LLINT_RETURN(result);
+
 }
 
 LLINT_SLOW_PATH_DECL(slow_path_put_to_scope)
@@ -1446,15 +1449,25 @@ LLINT_SLOW_PATH_DECL(slow_path_put_to_scope)
 
     CodeBlock* codeBlock = exec->codeBlock();
     const Identifier& ident = codeBlock->identifier(pc[2].u.operand);
-    printf("put to scope: %p [%s] (LLIntSlowPaths.cpp) ", pc, ident.ascii().data());
+    printf("put to scope: %p  [%s] (LLIntSlowPaths.cpp) ", pc, ident.ascii().data());
     JSObject* scope = jsCast<JSObject*>(LLINT_OP(1).jsValue());
     JSValue value = LLINT_OP_C(3).jsValue();
-    if(value.isInt32() && value.asInt32() == 2){
-      value.setTaint(1);
+    if(value.isInt32()  && value.asInt32() == 8){
+        value.settainttag();
     }
-    printf("isInt? %d Value : %d Taint : %d\n", value.isInt32(), value.asInt32(), value.getTaint());
+    else if (value.gettag() & 0x0000C000){
+        printf(" tainted ");
+    }
+    long int total = value.gettag();
+    total <<= 32;
+    total |= value.getpayload();
+    printf(" tag %x payload %x \n", value.gettag(), value.getpayload());
+
+    //printf("print : %d\n", scope->type() == GlobalObjectType);
+    //printf("isInt? %d Value : %d OR: %llx  t: %lx\n", value.isInt32(), value.asInt32(),  TagTypeNumber, total & TagTypeNumber);
     GetPutInfo getPutInfo = GetPutInfo(pc[4].u.operand);
     if (getPutInfo.resolveType() == LocalClosureVar) {
+
         JSLexicalEnvironment* environment = jsCast<JSLexicalEnvironment*>(scope);
         environment->variableAt(ScopeOffset(pc[6].u.operand)).set(vm, environment, value);
 
@@ -1471,6 +1484,7 @@ LLINT_SLOW_PATH_DECL(slow_path_put_to_scope)
         && jsDynamicCast<JSGlobalLexicalEnvironment*>(scope)
         && getPutInfo.initializationMode() != Initialization) {
         // When we can't statically prove we need a TDZ check, we must perform the check on the slow path.
+
         PropertySlot slot(scope);
         JSGlobalLexicalEnvironment::getOwnPropertySlot(scope, exec, ident, slot);
         if (slot.getValue(exec, ident) == jsTDZValue())
@@ -1482,7 +1496,6 @@ LLINT_SLOW_PATH_DECL(slow_path_put_to_scope)
 
     PutPropertySlot slot(scope, codeBlock->isStrictMode(), PutPropertySlot::UnknownContext, getPutInfo.initializationMode() == Initialization);
     scope->methodTable()->put(scope, exec, ident, value, slot);
-
     CommonSlowPaths::tryCachePutToScopeGlobal(exec, codeBlock, pc, scope, getPutInfo, slot, ident);
 
     LLINT_END();
