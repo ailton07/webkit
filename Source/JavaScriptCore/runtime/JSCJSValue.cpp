@@ -421,4 +421,21 @@ uint16_t JSValue::getTaint(){
     return m_tag;
 }
 
+uint32_t JSValue::gettag(){
+    return u.asBits.tag;
+}
+
+uint32_t JSValue::getpayload(){
+    return u.asBits.payload;
+}
+
+void JSValue::settainttag(){
+  u.asBits.tag |= 0x00004000;
+}
+void JSValue::normalize(){
+  if(u.asBits.tag & 0x00008000){
+      u.asBits.tag ^= 0x0000C000;
+  }
+}
+
 } // namespace JSC

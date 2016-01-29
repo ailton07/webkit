@@ -318,6 +318,10 @@ public:
     //taint functions
     uint16_t getTaint();
     void setTaint(uint16_t taint);
+    uint32_t gettag();
+    uint32_t getpayload();
+    void settainttag();
+    void normalize();
 #if USE(JSVALUE32_64)
     /*
      * On 32-bit platforms USE(JSVALUE32_64) should be defined, and we use a NaN-encoded
@@ -571,6 +575,7 @@ ALWAYS_INLINE JSValue jsNumber(unsigned long long i)
 {
     return JSValue(i);
 }
+
 
 inline bool operator==(const JSValue a, const JSCell* b) { return a == JSValue(b); }
 inline bool operator==(const JSCell* a, const JSValue b) { return JSValue(a) == b; }
