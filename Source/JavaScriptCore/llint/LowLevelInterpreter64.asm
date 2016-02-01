@@ -932,7 +932,7 @@ macro binaryOpCustomStore(integerOperationAndStore, doubleOperation, slowPath)
     dispatch(5)
 
 .slow:
-    m_interrupt()
+    #m_interrupt()
     callSlowPath(slowPath)
     dispatch(5)
 end
@@ -978,10 +978,11 @@ _llint_op_mul:
             move right, t3
             bmulio left, t3, slow
             btinz t3, .done
+
             bilt left, 0, slow
             bilt right, 0, slow
         .done:
-            orq tagTypeNumber, t3
+            m_propagation(left, t3)
             storeq t3, [cfr, index, 8]
         end,
         macro (left, right) muld left, right end,
@@ -1014,7 +1015,8 @@ _llint_op_div:
                 cdqi
                 idivi t3
                 btinz t1, slow
-                orq tagTypeNumber, t0
+                m_propagation(t3, t0)
+                #orq tagTypeNumber, t0
                 storeq t0, [cfr, index, 8]
             end,
             macro (left, right) divd left, right end,

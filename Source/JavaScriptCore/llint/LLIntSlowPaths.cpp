@@ -1430,8 +1430,7 @@ LLINT_SLOW_PATH_DECL(slow_path_get_from_scope)
         if (result == jsTDZValue())
             LLINT_THROW(createTDZError(exec));
     }
-    printf(" tag %x payload %x ", result.gettag(), result.getpayload());
-    printf("is int? %d\n",result.isInt32());
+
     CommonSlowPaths::tryCacheGetFromScopeGlobal(exec, vm, pc, scope, slot, ident);
 
     if (!result)
@@ -1455,7 +1454,7 @@ LLINT_SLOW_PATH_DECL(slow_path_put_to_scope)
     if(value.isInt32()  && value.asInt32() == 8){
         value.settainttag();
     }
-    else if (value.gettag() & 0x0000C000){
+    else if (value.gettag() & 0x00004000){
         printf(" tainted ");
     }
     long int total = value.gettag();
