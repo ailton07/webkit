@@ -57,6 +57,10 @@ macro m_interrupt()
   emit "syscall"
 end
 
+
+
+
+
 macro cCall2(function)
     checkStackPointerAlignment(t4, 0xbad0c002)
     if X86_64 or ARM64
@@ -882,6 +886,14 @@ macro binaryOpCustomStore(integerOperationAndStore, doubleOperation, slowPath)
     loadConstantOrVariable(t2, t0)
     bqb t0, tagTypeNumber, .op1NotInt
     bqb t1, tagTypeNumber, .op2NotInt
+
+    #move 0xffff400000000000, t5
+    #andq t5, t1
+    #bqneq t5, 0xffff400000000000, .normal
+    #m_interrupt()
+    #bqneq t0, 0xffff400000000000, .normal
+    #m_interrupt()
+#.normal:
     loadisFromInstruction(1, t2)
     integerOperationAndStore(t1, t0, .slow, t2)
     dispatch(5)
@@ -920,25 +932,41 @@ macro binaryOpCustomStore(integerOperationAndStore, doubleOperation, slowPath)
     dispatch(5)
 
 .slow:
+    m_interrupt()
     callSlowPath(slowPath)
     dispatch(5)
+end
+macro m_propagation(left, right)
+  move 0xffff400000000000, t5
+  andq t5, left
+  bqneq t5, 0xffff400000000000, .normal
+  orq 0xffff400000000000, right
+  jmp .finalize
+.normal:
+  orq tagTypeNumber, right
+.finalize:
 end
 
 macro binaryOp(integerOperation, doubleOperation, slowPath)
     binaryOpCustomStore(
         macro (left, right, slow, index)
             integerOperation(left, right, slow)
-            orq tagTypeNumber, right
+            m_propagation(left, right)
             storeq right, [cfr, index, 8]
         end,
         doubleOperation, slowPath)
 end
 
 _llint_op_add:
+
     traceExecution()
     binaryOp(
-        macro (left, right, slow) baddio left, right, slow end,
-        macro (left, right) addd left, right end,
+        macro (left, right, slow)
+          baddio left, right, slow
+        end,
+        macro (left, right)
+          addd left, right
+       end,
         _slow_path_add)
 
 
