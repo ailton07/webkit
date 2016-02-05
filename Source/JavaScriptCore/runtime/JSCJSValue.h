@@ -410,7 +410,7 @@ public:
     #define DoubleEncodeOffset 0x1000000000000ll
     // If all bits in the mask are set, this indicates an integer number,
     // if any but not all are set this value is a double precision number.
-    #define TagTypeNumber 0xffff000000000000ll
+    #define TagTypeNumber 0xfff0000000000000ll
 
     // All non-numeric (bool, null, undefined) immediates have bit 2 set.
     #define TagBitTypeOther 0x2ll

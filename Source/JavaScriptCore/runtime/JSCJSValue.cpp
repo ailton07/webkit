@@ -430,7 +430,8 @@ uint32_t JSValue::getpayload(){
 }
 
 void JSValue::settainttag(){
-  u.asBits.tag |= 0x00004000;
+  //u.asBits.tag |= 0x00004000;
+  u.asBits.tag |= 0x00010000;
 }
 void JSValue::normalize(){
   if(u.asBits.tag & 0x00008000){

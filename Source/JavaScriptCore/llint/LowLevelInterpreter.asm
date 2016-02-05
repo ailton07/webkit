@@ -191,7 +191,7 @@ if JSVALUE64
     const ValueTrue       = TagBitTypeOther | TagBitBool | 1
     const ValueUndefined  = TagBitTypeOther | TagBitUndefined
     const ValueNull       = TagBitTypeOther
-    const TagTypeNumber   = 0xffff000000000000
+    const TagTypeNumber   = 0xfff0000000000000
     const TagMask         = TagTypeNumber | TagBitTypeOther
 else
     const Int32Tag = -1
@@ -280,11 +280,11 @@ if JSVALUE64
     macro loadisFromInstruction(offset, dest)
         loadis offset * 8[PB, PC, 8], dest
     end
-    
+
     macro loadpFromInstruction(offset, dest)
         loadp offset * 8[PB, PC, 8], dest
     end
-    
+
     macro storepToInstruction(value, offset)
         storep value, offset * 8[PB, PC, 8]
     end
@@ -294,7 +294,7 @@ else
     macro loadisFromInstruction(offset, dest)
         loadis offset * 4[PC], dest
     end
-    
+
     macro loadpFromInstruction(offset, dest)
         loadp offset * 4[PC], dest
     end
@@ -796,7 +796,7 @@ end
 
 macro arrayProfile(cellAndIndexingType, profile, scratch)
     const cell = cellAndIndexingType
-    const indexingType = cellAndIndexingType 
+    const indexingType = cellAndIndexingType
     loadi JSCell::m_structureID[cell], scratch
     storei scratch, ArrayProfile::m_lastSeenStructureID[profile]
     loadb JSCell::m_indexingType[cell], indexingType
@@ -983,14 +983,14 @@ macro functionInitialization(profileArgSkip)
 end
 
 macro allocateJSObject(allocator, structure, result, scratch1, slowCase)
-    const offsetOfFirstFreeCell = 
-        MarkedAllocator::m_freeList + 
+    const offsetOfFirstFreeCell =
+        MarkedAllocator::m_freeList +
         MarkedBlock::FreeList::head
 
-    # Get the object from the free list.   
+    # Get the object from the free list.
     loadp offsetOfFirstFreeCell[allocator], result
     btpz result, slowCase
-    
+
     # Remove the object from the free list.
     loadp [result], scratch1
     storep scratch1, offsetOfFirstFreeCell[allocator]
@@ -1040,21 +1040,21 @@ if not C_LOOP
         const vm = a0
         const address = a1
         const zeroValue = a2
-    
+
         loadp VM::m_lastStackTop[vm], address
         bpbeq sp, address, .zeroFillDone
-    
+
         move 0, zeroValue
     .zeroFillLoop:
         storep zeroValue, [address]
         addp PtrSize, address
         bpa sp, address, .zeroFillLoop
-    
+
     .zeroFillDone:
         move sp, address
         storep address, VM::m_lastStackTop[vm]
         ret
-    
+
     # VMEntryRecord* vmEntryRecord(const VMEntryFrame* entryFrame)
     global _vmEntryRecord
     _vmEntryRecord:
@@ -1169,13 +1169,13 @@ _llint_function_for_call_prologue:
     prologue(functionForCallCodeBlockGetter, functionCodeBlockSetter, _llint_entry_osr_function_for_call, _llint_trace_prologue_function_for_call)
     functionInitialization(0)
     dispatch(0)
-    
+
 
 _llint_function_for_construct_prologue:
     prologue(functionForConstructCodeBlockGetter, functionCodeBlockSetter, _llint_entry_osr_function_for_construct, _llint_trace_prologue_function_for_construct)
     functionInitialization(1)
     dispatch(0)
-    
+
 
 _llint_function_for_call_arity_check:
     prologue(functionForCallCodeBlockGetter, functionCodeBlockSetter, _llint_entry_osr_function_for_call_arityCheck, _llint_trace_arityCheck_for_call)
@@ -1530,7 +1530,7 @@ _llint_op_construct_varargs:
 
 _llint_op_call_eval:
     traceExecution()
-    
+
     # Eval is executed in one of two modes:
     #
     # 1) We find that we're really invoking eval() in which case the
@@ -1563,7 +1563,7 @@ _llint_op_call_eval:
     # It turns out to be easier to just always have this return the cfr
     # and a PC to call, and that PC may be a dummy thunk that just
     # returns the JS value that the eval returned.
-    
+
     slowPathForCall(_llint_slow_path_call_eval, prepareForRegularCall)
 
 
@@ -1647,7 +1647,7 @@ _llint_op_debug:
     loadi CodeBlock::m_debuggerRequests[t0], t0
     btiz t0, .opDebugDone
     callSlowPath(_llint_slow_path_debug)
-.opDebugDone:                    
+.opDebugDone:
     dispatch(3)
 
 

@@ -20,7 +20,7 @@
  * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #ifndef JSValueInlines_h
@@ -171,19 +171,19 @@ inline JSValue::JSValue(JSNullTag)
     u.asBits.tag = NullTag;
     u.asBits.payload = 0;
 }
-    
+
 inline JSValue::JSValue(JSUndefinedTag)
 {
     u.asBits.tag = UndefinedTag;
     u.asBits.payload = 0;
 }
-    
+
 inline JSValue::JSValue(JSTrueTag)
 {
     u.asBits.tag = BooleanTag;
     u.asBits.payload = 1;
 }
-    
+
 inline JSValue::JSValue(JSFalseTag)
 {
     u.asBits.tag = BooleanTag;
@@ -279,24 +279,24 @@ inline uint32_t JSValue::tag() const
 {
     return u.asBits.tag;
 }
-    
+
 inline int32_t JSValue::payload() const
 {
     return u.asBits.payload;
 }
-    
+
 inline int32_t JSValue::asInt32() const
 {
     ASSERT(isInt32());
     return u.asBits.payload;
 }
-    
+
 inline double JSValue::asDouble() const
 {
     ASSERT(isDouble());
     return u.asDouble;
 }
-    
+
 ALWAYS_INLINE JSCell* JSValue::asCell() const
 {
     ASSERT(isCell());
@@ -424,7 +424,7 @@ inline JSValue::JSValue(JSNullTag)
 {
     u.asInt64 = ValueNull;
 }
-    
+
 inline JSValue::JSValue(JSUndefinedTag)
 {
     u.asInt64 = ValueUndefined;
@@ -495,7 +495,17 @@ inline bool JSValue::isNumber() const
 ALWAYS_INLINE JSCell* JSValue::asCell() const
 {
     ASSERT(isCell());
-    return u.ptr;
+    //void * ptr = (void *) u.ptr;
+    //printf("not reinterpret %p\n", u.ptr);
+    int tag =  u.asBits.tag >> 4;
+    long l = (long) u.ptr;
+    if(tag){
+        l <<= 16;
+        l >>= 16;
+        printf("%lx\n", l);
+    }
+    return (JSCell *)l;
+    //return u.ptr ;
 }
 
 #endif // USE(JSVALUE64)
@@ -549,6 +559,7 @@ inline int64_t JSValue::asMachineInt() const
 
 inline bool JSValue::isString() const
 {
+    printf("isCell %d\n", isCell());
     return isCell() && asCell()->isString();
 }
 
@@ -701,7 +712,7 @@ ALWAYS_INLINE JSValue JSValue::get(ExecState* exec, PropertyName propertyName) c
 
 ALWAYS_INLINE JSValue JSValue::get(ExecState* exec, PropertyName propertyName, PropertySlot& slot) const
 {
-    return getPropertySlot(exec, propertyName, slot) ? 
+    return getPropertySlot(exec, propertyName, slot) ?
         slot.getValue(exec, propertyName) : jsUndefined();
 }
 
@@ -716,7 +727,7 @@ ALWAYS_INLINE bool JSValue::getPropertySlot(ExecState* exec, PropertyName proper
         object = synthesizePrototype(exec);
     } else
         object = asObject(asCell());
-    
+
     return object->getPropertySlot(exec, propertyName, slot);
 }
 
@@ -737,7 +748,7 @@ ALWAYS_INLINE JSValue JSValue::get(ExecState* exec, unsigned propertyName, Prope
         object = synthesizePrototype(exec);
     } else
         object = asObject(asCell());
-    
+
     if (object->getPropertySlot(exec, propertyName, slot))
         return slot.getValue(exec, propertyName);
     return jsUndefined();
@@ -913,7 +924,7 @@ inline TriState JSValue::pureStrictEqual(JSValue v1, JSValue v2)
 
     if (!v1.isCell() || !v2.isCell())
         return triState(v1 == v2);
-    
+
     if (v1.asCell()->isString() && v2.asCell()->isString()) {
         const StringImpl* v1String = asString(v1)->tryGetValueImpl();
         const StringImpl* v2String = asString(v2)->tryGetValueImpl();
@@ -921,7 +932,7 @@ inline TriState JSValue::pureStrictEqual(JSValue v1, JSValue v2)
             return MixedTriState;
         return triState(WTF::equal(*v1String, *v2String));
     }
-    
+
     return triState(v1 == v2);
 }
 
@@ -947,4 +958,3 @@ ALWAYS_INLINE bool JSValue::requireObjectCoercible(ExecState* exec) const
 } // namespace JSC
 
 #endif // JSValueInlines_h
-
