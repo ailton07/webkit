@@ -937,10 +937,10 @@ macro binaryOpCustomStore(integerOperationAndStore, doubleOperation, slowPath)
     dispatch(5)
 end
 macro m_propagation(left, right)
-  move 0xffff400000000000, t5
+  move 0xfff1000000000000, t5
   andq t5, left
-  bqneq t5, 0xffff400000000000, .normal
-  orq 0xffff400000000000, right
+  bqneq t5, 0xfff1000000000000, .normal
+  orq 0xfff1000000000000, right
   jmp .finalize
 .normal:
   orq tagTypeNumber, right
