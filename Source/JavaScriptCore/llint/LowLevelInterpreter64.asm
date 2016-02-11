@@ -936,10 +936,9 @@ macro binaryOpCustomStore(integerOperationAndStore, doubleOperation, slowPath)
     callSlowPath(slowPath)
     dispatch(5)
 end
+
 macro m_propagation(left, right)
-  move 0xfff1000000000000, t5
-  andq t5, left
-  bqneq t5, 0xfff1000000000000, .normal
+  bqneq t5, 1, .normal
   orq 0xfff1000000000000, right
   jmp .finalize
 .normal:
@@ -947,9 +946,21 @@ macro m_propagation(left, right)
 .finalize:
 end
 
+macro m_prepare_prop(left, right)
+  move 0, t5
+  bqlt left, 0xfff1000000000000, .check2op
+  move 1, t5
+  jmp .checkall
+.check2op:
+  bqlt right, 0xfff1000000000000, .checkall
+  move 1, t5
+.checkall:
+end
+
 macro binaryOp(integerOperation, doubleOperation, slowPath)
     binaryOpCustomStore(
         macro (left, right, slow, index)
+            m_prepare_prop(left, right)
             integerOperation(left, right, slow)
             m_propagation(left, right)
             storeq right, [cfr, index, 8]
