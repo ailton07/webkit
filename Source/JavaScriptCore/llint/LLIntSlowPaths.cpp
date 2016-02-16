@@ -58,10 +58,6 @@
 #include "VMInlines.h"
 #include <wtf/StringPrintStream.h>
 
-
-
-
-
 namespace JSC { namespace LLInt {
 
 #define LLINT_BEGIN_NO_SET_PC() \
@@ -1225,22 +1221,6 @@ inline SlowPathReturnType setUpCall(ExecState* execCallee, Instruction* pc, Code
     LLINT_CALL_RETURN(exec, execCallee, codePtr.executableAddress());
 }
 
-bool searchSensitiveMethod (String palavra)
-{
-  const Vector<String> getss = {"get1", "get2", "get3", "Date" };
-  size_t size = getss.size();
-
-    for(int i = 0; i < (int)size; i++)
-    {
-        if(!(strcmp (palavra.ascii().data(), getss[i].ascii().data())))
-            return true;
-    }
-
- return false;
-
-}
-
-int sensitiveI = 0;
 inline SlowPathReturnType genericCall(ExecState* exec, Instruction* pc, CodeSpecializationKind kind)
 {
     // This needs to:
@@ -1257,18 +1237,9 @@ inline SlowPathReturnType genericCall(ExecState* exec, Instruction* pc, CodeSpec
     execCallee->uncheckedR(JSStack::Callee) = calleeAsValue;
     execCallee->setCallerFrame(exec);
 
-    const Identifier& ident = exec->codeBlock()->identifier(pc[3].u.operand);
-    printf("genericCall sensitiveI, pc[3] %p [%s] (LLIntSlowPaths.cpp)",pc, ident.ascii().data());
-    if(searchSensitiveMethod(ident.ascii().data()))
-    {
-     sensitiveI = 1;
-     printf(" sensitiveI = 1");
-    }
-    printf("\n");
     ASSERT(pc[5].u.callLinkInfo);
     return setUpCall(execCallee, pc, kind, calleeAsValue, pc[5].u.callLinkInfo);
 }
-
 
 LLINT_SLOW_PATH_DECL(slow_path_call)
 {
@@ -1480,28 +1451,17 @@ LLINT_SLOW_PATH_DECL(slow_path_put_to_scope)
     printf("put to scope: %p  [%s] (LLIntSlowPaths.cpp) ", pc, ident.ascii().data());
     JSObject* scope = jsCast<JSObject*>(LLINT_OP(1).jsValue());
     JSValue value = LLINT_OP_C(3).jsValue();
-    // Marcação de inteiros
     if(value.isInt32()  && value.asInt32() == 8){
         value.settainttag();
     }
     else if (value.gettag() & 0x00004000){
         printf(" tainted ");
     }
-    // Marcação de objetos
-    if(value.isString() && !strcmp(value.toString(exec)->value(exec).utf8().data(), "8")){
-        value.settainttag();
-    }
-
-    // Marcação de sources
-    if(sensitiveI){
-      value.settainttag();
-      sensitiveI = 0;
-    }
-
     long int total = value.gettag();
     total <<= 32;
     total |= value.getpayload();
     printf(" tag %x payload %x \n", value.gettag(), value.getpayload());
+
     //printf("print : %d\n", scope->type() == GlobalObjectType);
     //printf("isInt? %d Value : %d OR: %llx  t: %lx\n", value.isInt32(), value.asInt32(),  TagTypeNumber, total & TagTypeNumber);
     GetPutInfo getPutInfo = GetPutInfo(pc[4].u.operand);
