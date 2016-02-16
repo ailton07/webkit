@@ -94,7 +94,7 @@ namespace JSC {
 String StackFrame::friendlySourceURL() const
 {
     String traceLine;
-    
+
     switch (codeType) {
     case StackFrameEvalCode:
     case StackFrameModuleCode:
@@ -154,7 +154,7 @@ JSValue eval(CallFrame* callFrame)
     String programSource = asString(program)->value(callFrame);
     if (callFrame->hadException())
         return JSValue();
-    
+
     CallFrame* callerFrame = callFrame->callerFrame();
     CodeBlock* callerCodeBlock = callerFrame->codeBlock();
     JSScope* callerScopeChain = callerFrame->uncheckedR(callerCodeBlock->scopeRegister().offset()).Register::scope();
@@ -176,10 +176,10 @@ JSValue eval(CallFrame* callFrame)
             } else {
                 LiteralParser<UChar> preparser(callFrame, programSource.characters16(), programSource.length(), NonStrictJSON);
                 if (JSValue parsedObject = preparser.tryLiteralParse())
-                    return parsedObject;                
+                    return parsedObject;
             }
         }
-        
+
         // If the literal parser bailed, it should not have thrown exceptions.
         ASSERT(!callFrame->vm().exception());
 
@@ -199,11 +199,11 @@ unsigned sizeOfVarargs(CallFrame* callFrame, JSValue arguments, uint32_t firstVa
     if (UNLIKELY(!arguments.isCell())) {
         if (arguments.isUndefinedOrNull())
             return 0;
-        
+
         callFrame->vm().throwException(callFrame, createInvalidFunctionApplyParameterError(callFrame, arguments));
         return 0;
     }
-    
+
     JSCell* cell = arguments.asCell();
     unsigned length;
     switch (cell->type()) {
@@ -224,25 +224,25 @@ unsigned sizeOfVarargs(CallFrame* callFrame, JSValue arguments, uint32_t firstVa
             length = jsCast<JSObject*>(cell)->get(callFrame, callFrame->propertyNames().length).toUInt32(callFrame);
         break;
     }
-    
+
     if (length >= firstVarArgOffset)
         length -= firstVarArgOffset;
     else
         length = 0;
-    
+
     return length;
 }
 
 unsigned sizeFrameForVarargs(CallFrame* callFrame, JSStack* stack, JSValue arguments, unsigned numUsedStackSlots, uint32_t firstVarArgOffset)
 {
     unsigned length = sizeOfVarargs(callFrame, arguments, firstVarArgOffset);
-    
+
     CallFrame* calleeFrame = calleeFrameForVarargs(callFrame, numUsedStackSlots, length + 1);
     if (length > maxArguments || !stack->ensureCapacityFor(calleeFrame->registers())) {
         throwStackOverflowError(callFrame);
         return 0;
     }
-    
+
     return length;
 }
 
@@ -250,7 +250,7 @@ void loadVarargs(CallFrame* callFrame, VirtualRegister firstElementDest, JSValue
 {
     if (UNLIKELY(!arguments.isCell()))
         return;
-    
+
     JSCell* cell = arguments.asCell();
     switch (cell->type()) {
     case DirectArgumentsType:
@@ -278,12 +278,12 @@ void loadVarargs(CallFrame* callFrame, VirtualRegister firstElementDest, JSValue
 void setupVarargsFrame(CallFrame* callFrame, CallFrame* newCallFrame, JSValue arguments, uint32_t offset, uint32_t length)
 {
     VirtualRegister calleeFrameOffset(newCallFrame - callFrame);
-    
+
     loadVarargs(
         callFrame,
         calleeFrameOffset + CallFrame::argumentOffset(0),
         arguments, offset, length);
-    
+
     newCallFrame->setArgumentCountIncludingThis(length + 1);
 }
 
@@ -387,7 +387,7 @@ void Interpreter::dumpRegisters(CallFrame* callFrame)
         dataLogF("[r% 3d %14s]      | %10p | %-16s 0x%lld \n", registerNumber, name.ascii().data(), it, toCString(v).data(), (long long)JSValue::encode(v));
         --it;
     }
-    
+
     dataLogF("-----------------------------------------------------------------------------\n");
     dataLogF("[ArgumentCount]            | %10p | %lu \n", it, (unsigned long) callFrame->argumentCount());
     --it;
@@ -562,7 +562,7 @@ public:
                 StackFrame s = { Strong<JSObject>(vm, visitor->callee()), StackFrameNativeCode, Strong<ScriptExecutable>(), Strong<UnlinkedCodeBlock>(), 0, 0, 0, 0, 0, String()};
                 m_results.append(s);
             }
-    
+
             m_remainingCapacityForFrameCapture--;
             return StackVisitor::Continue;
         }
@@ -726,7 +726,7 @@ private:
             if (dontCopyRegisters.get(currentEntry.reg()))
                 continue;
             RegisterAtOffset* vmCalleeSavesEntry = allCalleeSaves->find(currentEntry.reg());
-            
+
             vm.calleeSaveRegistersBuffer[vmCalleeSavesEntry->offsetAsIndex()] = *(frame + currentEntry.offsetAsIndex());
         }
 #else
@@ -954,7 +954,7 @@ failedJSONP:
         return checkedReturn(callFrame->vm().throwException(callFrame, error));
 
     ProgramCodeBlock* codeBlock = program->codeBlock();
-
+    codeBlock->dumpBytecode();
     if (UNLIKELY(vm.shouldTriggerTermination(callFrame)))
         return throwTerminatedExecutionException(callFrame);
 
@@ -1013,6 +1013,7 @@ JSValue Interpreter::executeCall(CallFrame* callFrame, JSObject* function, CallT
             return checkedReturn(callFrame->vm().throwException(callFrame, compileError));
         }
         newCodeBlock = callData.js.functionExecutable->codeBlockForCall();
+        newCodeBlock->dumpBytecode();
         ASSERT(!!newCodeBlock);
         newCodeBlock->m_shouldAlwaysBeInlined = false;
     } else
@@ -1125,7 +1126,7 @@ CallFrameClosure Interpreter::prepareForRepeatCall(FunctionExecutable* functionE
 {
     VM& vm = *scope->vm();
     ASSERT(!vm.exception());
-    
+
     if (vm.isCollectorBusy())
         return CallFrameClosure();
 
@@ -1146,11 +1147,11 @@ CallFrameClosure Interpreter::prepareForRepeatCall(FunctionExecutable* functionE
     return result;
 }
 
-JSValue Interpreter::execute(CallFrameClosure& closure) 
+JSValue Interpreter::execute(CallFrameClosure& closure)
 {
     VM& vm = *closure.vm;
     SamplingScope samplingScope(this);
-    
+
     ASSERT(!vm.isCollectorBusy());
     RELEASE_ASSERT(vm.currentThreadIsHoldingAPILock());
     if (vm.isCollectorBusy())
@@ -1181,7 +1182,7 @@ JSValue Interpreter::execute(EvalExecutable* eval, CallFrame* callFrame, JSValue
 {
     VM& vm = *scope->vm();
     SamplingScope samplingScope(this);
-    
+
     ASSERT(scope->vm() == &callFrame->vm());
     ASSERT(!vm.exception());
     ASSERT(!vm.isCollectorBusy());
@@ -1191,7 +1192,7 @@ JSValue Interpreter::execute(EvalExecutable* eval, CallFrame* callFrame, JSValue
 
     VMEntryScope entryScope(vm, scope->globalObject());
     if (!vm.isSafeToRecurse())
-        return checkedReturn(throwStackOverflowError(callFrame));        
+        return checkedReturn(throwStackOverflowError(callFrame));
 
     unsigned numVariables = eval->numVariables();
     int numFunctions = eval->numberOfFunctionDecls();
@@ -1206,7 +1207,7 @@ JSValue Interpreter::execute(EvalExecutable* eval, CallFrame* callFrame, JSValue
             if (node->isGlobalObject()) {
                 variableObject = node;
                 break;
-            } 
+            }
             if (JSLexicalEnvironment* lexicalEnvironment = jsDynamicCast<JSLexicalEnvironment*>(node)) {
                 if (lexicalEnvironment->symbolTable()->scopeType() == SymbolTable::ScopeType::VarScope) {
                     variableObject = node;
@@ -1365,7 +1366,7 @@ NEVER_INLINE void Interpreter::debug(CallFrame* callFrame, DebugHookID debugHook
             break;
     }
     ASSERT(!callFrame->hadException());
-}    
+}
 
 void Interpreter::enableSampler()
 {
