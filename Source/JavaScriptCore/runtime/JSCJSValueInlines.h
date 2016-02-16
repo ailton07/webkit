@@ -502,7 +502,7 @@ ALWAYS_INLINE JSCell* JSValue::asCell() const
     if(tag){
         l <<= 16;
         l >>= 16;
-        //printf("%lx\n", l);
+        printf("%lx\n", l);
     }
     return (JSCell *)l;
     //return u.ptr ;
