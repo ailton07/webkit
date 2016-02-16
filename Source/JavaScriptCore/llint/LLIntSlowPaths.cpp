@@ -1144,9 +1144,41 @@ static SlowPathReturnType handleHostCall(ExecState* execCallee, Instruction* pc,
     LLINT_CALL_THROW(exec, createNotAConstructorError(exec, callee));
 }
 
+bool searchSensitiveMethod (String palavra)
+{
+  String str = palavra;
+  const Vector<String> getss = {"get1", "get2", "get3", "Date" };
+  size_t size = getss.size();
+
+  str.replace(0, 9, "");
+
+  int parenthesis = str.find('(');
+
+  str.truncate(parenthesis);
+
+    for(int i = 0; i < (int)size; i++)
+    {
+        if(!(strcmp (str.ascii().data(), getss[i].ascii().data())))
+        {
+          return true;
+        }
+    }
+ return false;
+}
+
+
+int sensitiveI = 0;
 inline SlowPathReturnType setUpCall(ExecState* execCallee, Instruction* pc, CodeSpecializationKind kind, JSValue calleeAsValue, LLIntCallLinkInfo* callLinkInfo = 0)
 {
     ExecState* exec = execCallee->callerFrame();
+
+    //dataLog("SetUpCall \t", calleeAsValue.toString(exec)->value(exec).utf8().data()); dataLog("\n ");
+    if(searchSensitiveMethod(calleeAsValue.toString(exec)->value(exec).utf8().data()))
+    {
+     sensitiveI = 1;
+     printf("sensitiveI = 1\n");
+    }
+
 
 #if LLINT_SLOW_PATH_TRACING
     dataLogF("Performing call with recorded PC = %p\n", exec->currentVPC());
@@ -1451,12 +1483,23 @@ LLINT_SLOW_PATH_DECL(slow_path_put_to_scope)
     printf("put to scope: %p  [%s] (LLIntSlowPaths.cpp) ", pc, ident.ascii().data());
     JSObject* scope = jsCast<JSObject*>(LLINT_OP(1).jsValue());
     JSValue value = LLINT_OP_C(3).jsValue();
+    // Taint sobre inteiro
     if(value.isInt32()  && value.asInt32() == 8){
         value.settainttag();
     }
     else if (value.gettag() & 0x00004000){
         printf(" tainted ");
     }
+    // Taint sobre objeto
+    if(value.isString() && !strcmp(value.toString(exec)->value(exec).utf8().data(), "8"))
+        value.settainttag();
+    // Taint no source
+    if(sensitiveI)
+    {
+      value.settainttag();
+      sensitiveI = 0;
+    }
+
     long int total = value.gettag();
     total <<= 32;
     total |= value.getpayload();
