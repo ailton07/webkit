@@ -1166,6 +1166,72 @@ bool searchSensitiveMethod (String palavra)
  return false;
 }
 
+bool searchSinks(ExecState* execCallee, Instruction* pc, String metodo)
+{
+  ExecState* exec = execCallee->callerFrame();
+  int argumentos = pc[3].u.operand;
+
+  //  Checa se existem argumentos
+  if(argumentos>1){
+    //Trata a string metodo
+    String str = metodo;
+    const Vector<String> getss = {"String", "send"};
+    size_t size = getss.size();
+    str.replace(0, 9, "");
+    int parenthesis = str.find('(');
+    str.truncate(parenthesis);
+
+    bool argSensivel = false;
+
+    JSValue argumentoX; // Variável para varrer os argumentos
+    for(int i = 0; i < argumentos - 1; i++)
+    {
+      argumentoX = execCallee->argument(i);
+      if((argumentoX.gettag()==0xfff10000) || ((argumentoX.gettag() > 0x17000) && (argumentoX.gettag() < 0x17fff)))
+      {
+        argSensivel = true; // Existe um argumento sensivel
+        break;
+      }
+    }//Fim do For
+
+    //Checa se o metodo é um sink
+    for(int j = 0; j < (int)size; j++)
+    {
+      if((!(strcmp (str.ascii().data(), getss[j].ascii().data()))) && argSensivel)
+      {
+        return true;
+      }
+    } //Fim do For sink
+
+  } //Fim do IF argumentos
+
+  return false;
+}
+
+void printArguments (ExecState* execCallee, Instruction* pc)
+{
+  ExecState* exec = execCallee->callerFrame();
+  int argumentos = pc[3].u.operand;
+  JSValue argumentoX;
+  dataLog("\n\n");
+  if(argumentos>1){
+    dataLog("*********Argumentos*********");
+    for(int i = 0; i < argumentos - 1; i++){
+      printf(" Argumento %d: ", (i+1));
+      argumentoX = execCallee->argument(i);
+      dataLog(argumentoX.toString(exec)->value(exec).utf8().data());
+      printf(" \ntag %x \n", argumentoX.gettag());
+      printf("\n");
+      if((argumentoX.gettag()==0xfff10000) || ((argumentoX.gettag() > 0x17000) && (argumentoX.gettag() < 0x17fff))){
+        printf("Argumento tageado\n");
+      }
+      dataLog("****************************");
+    }
+  }
+  dataLog("\n\n");
+}
+
+
 
 int sensitiveI = 0;
 inline SlowPathReturnType setUpCall(ExecState* execCallee, Instruction* pc, CodeSpecializationKind kind, JSValue calleeAsValue, LLIntCallLinkInfo* callLinkInfo = 0)
@@ -1173,6 +1239,11 @@ inline SlowPathReturnType setUpCall(ExecState* execCallee, Instruction* pc, Code
     ExecState* exec = execCallee->callerFrame();
 
     //dataLog("SetUpCall \t", calleeAsValue.toString(exec)->value(exec).utf8().data()); dataLog("\n ");
+    //printArguments(execCallee, pc);
+    if(searchSinks(execCallee, pc, calleeAsValue.toString(exec)->value(exec).utf8().data()))
+    {
+     printf("\n*****Argumento tageado em um Sink****\n");
+    }
     if(searchSensitiveMethod(calleeAsValue.toString(exec)->value(exec).utf8().data()))
     {
      sensitiveI = 1;
