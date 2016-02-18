@@ -28,3 +28,9 @@ var c = new String(b);</br>
 Onde Date() é um método source, e String() é um método sink.
 
 A saída deve ser:
+
+(...)
+
+Argumento tageado em um Sink
+
+(...)
