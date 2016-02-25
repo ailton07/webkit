@@ -497,12 +497,19 @@ ALWAYS_INLINE JSCell* JSValue::asCell() const
     ASSERT(isCell());
     //void * ptr = (void *) u.ptr;
     //printf("not reinterpret %p\n", u.ptr);
-    int tag =  u.asBits.tag >> 4;
+    //int tag =  u.asBits.tag >> 4;
     long l = (long) u.ptr;
-    if(tag){
+    if((u.asBits.tag & 0x00010000) &&
+      (u.asBits.tag <= 0x0001FFFF && u.asBits.tag > 0x00010000)){
         l <<= 16;
         l >>= 16;
-        //printf("%lx\n", l);
+        JSCell * cell  = jsCast<JSCell*>((void *)l);
+        if(!cell->isTainted()){
+          cell->putTaintType();
+          //printf("not taint\n");
+        //  ((JSCell *)l)->putTaintType();
+        }
+
     }
     return (JSCell *)l;
     //return u.ptr ;
@@ -559,7 +566,7 @@ inline int64_t JSValue::asMachineInt() const
 
 inline bool JSValue::isString() const
 {
-    printf("isCell %d\n", isCell());
+    //printf("isCell %d\n", isCell());
     return isCell() && asCell()->isString();
 }
 

@@ -260,4 +260,12 @@ void JSCell::getGenericPropertyNames(JSObject*, ExecState*, PropertyNameArray&, 
     RELEASE_ASSERT_NOT_REACHED();
 }
 
+void JSCell::putTaintType(){
+  m_type = (JSType) (TaintedType + m_type);
+}
+
+bool JSCell::isTainted(){
+    uint16_t v  = (uint16_t) m_type;
+    return v > 0x80;
+}
 } // namespace JSC

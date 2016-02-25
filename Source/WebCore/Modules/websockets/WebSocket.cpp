@@ -210,7 +210,6 @@ void WebSocket::connect(const String& url, const Vector<String>& protocols, Exce
 {
     LOG(Network, "WebSocket %p connect() url='%s'", this, url.utf8().data());
     m_url = URL(URL(), url);
-
     if (!m_url.isValid()) {
         scriptExecutionContext()->addConsoleMessage(MessageSource::JS, MessageLevel::Error, "Invalid url for WebSocket " + m_url.stringCenterEllipsizedToLength());
         m_state = CLOSED;
@@ -302,11 +301,20 @@ void WebSocket::connect(const String& url, const Vector<String>& protocols, Exce
 
 void WebSocket::send(const String& message, ExceptionCode& ec)
 {
+    String str(message);
     LOG(Network, "WebSocket %p send() Sending String '%s'", this, message.utf8().data());
     if (m_state == CONNECTING) {
         ec = INVALID_STATE_ERR;
         return;
     }
+    printf("print: %s\n",str.utf8().data());
+
+    //if (strstr(message.utf8().data(), "taint"))
+      if(strstr(str.utf8().data(), "taint")){
+          str.remove(message.length() - 5, 5);
+          printf("achou %s\n", str.utf8().data());
+      }
+
     // No exception is raised if the connection was once established but has subsequently been closed.
     if (m_state == CLOSING || m_state == CLOSED) {
         size_t payloadSize = message.utf8().length();
@@ -315,7 +323,7 @@ void WebSocket::send(const String& message, ExceptionCode& ec)
         return;
     }
     ASSERT(m_channel);
-    ThreadableWebSocketChannel::SendResult result = m_channel->send(message);
+    ThreadableWebSocketChannel::SendResult result = m_channel->send(str);
     if (result == ThreadableWebSocketChannel::InvalidMessage) {
         scriptExecutionContext()->addConsoleMessage(MessageSource::JS, MessageLevel::Error, ASCIILiteral("Websocket message contains invalid character(s)."));
         ec = SYNTAX_ERR;
@@ -331,6 +339,7 @@ void WebSocket::send(ArrayBuffer* binaryData, ExceptionCode& ec)
         ec = INVALID_STATE_ERR;
         return;
     }
+
     if (m_state == CLOSING || m_state == CLOSED) {
         unsigned payloadSize = binaryData->byteLength();
         m_bufferedAmountAfterClose = saturateAdd(m_bufferedAmountAfterClose, payloadSize);
@@ -362,6 +371,7 @@ void WebSocket::send(ArrayBufferView* arrayBufferView, ExceptionCode& ec)
 
 void WebSocket::send(Blob* binaryData, ExceptionCode& ec)
 {
+
     LOG(Network, "WebSocket %p send() Sending Blob '%s'", this, binaryData->url().stringCenterEllipsizedToLength().utf8().data());
     if (m_state == CONNECTING) {
         ec = INVALID_STATE_ERR;

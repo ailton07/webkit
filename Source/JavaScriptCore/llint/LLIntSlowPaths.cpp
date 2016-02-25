@@ -553,7 +553,6 @@ LLINT_SLOW_PATH_DECL(slow_path_get_by_id)
     const Identifier& ident = codeBlock->identifier(pc[3].u.operand);
     JSValue baseValue = LLINT_OP_C(2).jsValue();
     PropertySlot slot(baseValue);
-
     JSValue result = baseValue.get(exec, ident, slot);
     LLINT_CHECK_EXCEPTION();
     LLINT_OP(1) = result;
@@ -1049,6 +1048,7 @@ LLINT_SLOW_PATH_DECL(slow_path_new_generator_func)
 #if LLINT_SLOW_PATH_TRACING
     dataLogF("Creating function!\n");
 #endif
+    printf("creating function\n");
     LLINT_RETURN(JSGeneratorFunction::create(vm, codeBlock->functionDecl(pc[3].u.operand), scope));
 }
 
@@ -1092,7 +1092,7 @@ static SlowPathReturnType handleHostCall(ExecState* execCallee, Instruction* pc,
 #if LLINT_SLOW_PATH_TRACING
     dataLog("Performing host call.\n");
 #endif
-
+    printf("handleHostCall\n");
     ExecState* exec = execCallee->callerFrame();
     VM& vm = exec->vm();
 
@@ -1206,7 +1206,8 @@ inline SlowPathReturnType setUpCall(ExecState* execCallee, Instruction* pc, Code
 
     if (!LLINT_ALWAYS_ACCESS_SLOW && callLinkInfo) {
         CodeBlock* callerCodeBlock = exec->codeBlock();
-
+        //printf("enter in calllink\n");
+        //callerCodeBlock->dumpBytecode();
         ConcurrentJITLocker locker(callerCodeBlock->m_lock);
 
         if (callLinkInfo->isOnList())
@@ -1217,7 +1218,6 @@ inline SlowPathReturnType setUpCall(ExecState* execCallee, Instruction* pc, Code
         if (codeBlock)
             codeBlock->linkIncomingCall(exec, callLinkInfo);
     }
-
     LLINT_CALL_RETURN(exec, execCallee, codePtr.executableAddress());
 }
 
@@ -1228,7 +1228,6 @@ inline SlowPathReturnType genericCall(ExecState* exec, Instruction* pc, CodeSpec
     // - Figure out what to call and compile it if necessary.
     // - If possible, link the call's inline cache.
     // - Return a tuple of machine code address to call and the new call frame.
-
     JSValue calleeAsValue = LLINT_OP_C(2).jsValue();
 
     ExecState* execCallee = exec - pc[4].u.operand;
@@ -1436,9 +1435,14 @@ LLINT_SLOW_PATH_DECL(slow_path_get_from_scope)
     if (!result)
         result = slot.getValue(exec, ident);
 
+    if(result.isCell() && (result.gettag() & 0x00010000) == 0x00010000){
+        result.normalize();
+    }
     printf("is int? %lx Value : %lx\n",result.gettag(), result.getpayload());
     //printf("a: %d\n", pc[0].u.operand);
+
     LLINT_RETURN(result);
+
 
 }
 
@@ -1454,13 +1458,13 @@ LLINT_SLOW_PATH_DECL(slow_path_put_to_scope)
     if(value.isInt32()  && value.asInt32() == 8){
         value.settainttag();
     }
-    else if (value.gettag() & 0x00004000){
+    else if (value.isInt32() && value.gettag() & 0x00004000){
         printf(" tainted ");
     }
-    long int total = value.gettag();
-    total <<= 32;
-    total |= value.getpayload();
-    printf(" tag %x payload %x \n", value.gettag(), value.getpayload());
+    if(value.isString() && !strcmp(value.toString(exec)->value(exec).utf8().data(), "8"))
+        value.settainttag();
+
+    printf(" tag %x payload %x\n", value.gettag(), value.getpayload());
 
     //printf("print : %d\n", scope->type() == GlobalObjectType);
     //printf("isInt? %d Value : %d OR: %llx  t: %lx\n", value.isInt32(), value.asInt32(),  TagTypeNumber, total & TagTypeNumber);
@@ -1496,7 +1500,7 @@ LLINT_SLOW_PATH_DECL(slow_path_put_to_scope)
     PutPropertySlot slot(scope, codeBlock->isStrictMode(), PutPropertySlot::UnknownContext, getPutInfo.initializationMode() == Initialization);
     scope->methodTable()->put(scope, exec, ident, value, slot);
     CommonSlowPaths::tryCachePutToScopeGlobal(exec, codeBlock, pc, scope, getPutInfo, slot, ident);
-
+    //printf("[end]\n");
     LLINT_END();
 }
 

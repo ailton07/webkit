@@ -509,8 +509,14 @@ ALWAYS_INLINE RefPtr<AtomicStringImpl> JSString::toExistingAtomicString(ExecStat
 
 inline const String& JSString::value(ExecState* exec) const
 {
+    //printf("top\n");
+
     if (isRope())
         static_cast<const JSRopeString*>(this)->resolveRope(exec);
+    //m_value.append((UChar *)"_tainted_", 9);
+    //if(isTainted())
+    //printf("marking\n");
+
     return m_value;
 }
 
@@ -724,13 +730,21 @@ inline bool JSValue::toBoolean(ExecState* exec) const
 
 inline JSString* JSValue::toString(ExecState* exec) const
 {
-    if (isString())
-        return jsCast<JSString*>(asCell());
+      if (isString()){
+        JSString * str = jsCast<JSString*>(asCell());
+        //printf("Tainted %d\n",str->isTainted());
+        if (str->isTainted()){
+          str->m_value.append((LChar *)"taint");
+          
+        }
+        return str;
+    }
     return toStringSlowCase(exec);
 }
 
 inline String JSValue::toWTFString(ExecState* exec) const
 {
+    printf("wtf\n");
     if (isString())
         return static_cast<JSString*>(asCell())->value(exec);
     return toWTFStringSlowCase(exec);
