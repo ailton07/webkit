@@ -363,31 +363,22 @@ bool JSValue::isValidCallee()
 
 JSString* JSValue::toStringSlowCase(ExecState* exec) const
 {
-    JSString * string;
     VM& vm = exec->vm();
     ASSERT(!isString());
     if (isInt32()) {
         auto integer = asInt32();
-        if (static_cast<unsigned>(integer) <= 9){
-            string = vm.smallStrings.singleCharacterString(integer + '0');
-        }
-        else
-          string = jsNontrivialString(&vm, vm.numericStrings.add(integer));
-        if((u.asBits.tag & 0x00010000) == 0x00010000){
-            string->m_value.append((LChar *)"taint", 5);
-          //printf("foi\n");
-        }
-        return string;
+        if (static_cast<unsigned>(integer) <= 9)
+            return vm.smallStrings.singleCharacterString(integer + '0');
+        return jsNontrivialString(&vm, vm.numericStrings.add(integer));
     }
-    if (isDouble()){
+    if (isDouble())
         return jsString(&vm, vm.numericStrings.add(asDouble()));
-    }
     if (isTrue())
         return vm.smallStrings.trueString();
     if (isFalse())
         return vm.smallStrings.falseString();
     if (isNull())
-        string = vm.smallStrings.nullString();
+        return vm.smallStrings.nullString();
     if (isUndefined())
         return vm.smallStrings.undefinedString();
     if (isSymbol()) {
@@ -397,9 +388,8 @@ JSString* JSValue::toStringSlowCase(ExecState* exec) const
 
     ASSERT(isCell());
     JSValue value = asCell()->toPrimitive(exec, PreferString);
-    if (exec->hadException()){
+    if (exec->hadException())
         return jsEmptyString(exec);
-    }
     ASSERT(!value.isObject());
     return value.toString(exec);
 }
@@ -444,9 +434,9 @@ void JSValue::settainttag(){
   u.asBits.tag |= 0x00010000;
 }
 void JSValue::normalize(){
-    u.asBits.tag <<=17;
-    u.asBits.tag >>=17;
-    asCell();
+  if(u.asBits.tag & 0x00008000){
+      u.asBits.tag ^= 0x0000C000;
+  }
 }
 
 } // namespace JSC

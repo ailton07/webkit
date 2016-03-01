@@ -79,61 +79,6 @@ enum JSType : uint8_t {
     ClosureObjectType,
 
     LastJSCObjectType = ClosureObjectType,
-    TaintedType = 0x80,
-
-    TaintedUnspecifiedType,
-    TaintedUndefinedType,
-    TaintedBooleanType,
-    TaintedNumberType,
-    TaintedNullType,
-
-    // The CellType value must come before any JSType that is a JSCell.
-    TaintedCellType,
-    TaintedStringType,
-    TaintedSymbolType,
-
-    TaintedGetterSetterType,
-    TaintedCustomGetterSetterType,
-    TaintedAPIValueWrapperType,
-
-    TaintedEvalExecutableType,
-    TaintedProgramExecutableType,
-    TaintedModuleProgramExecutableType,
-    TaintedFunctionExecutableType,
-    TaintedWebAssemblyExecutableType,
-
-    TaintedUnlinkedFunctionExecutableType,
-    TaintedUnlinkedProgramCodeBlockType,
-    TaintedUnlinkedModuleProgramCodeBlockType,
-    TaintedUnlinkedEvalCodeBlockType,
-    TaintedUnlinkedFunctionCodeBlockType,
-
-    // The ObjectType value must come before any JSType that is a subclass of JSObject.
-    TaintedObjectType,
-    TaintedFinalObjectType,
-    TaintedJSCalleeType,
-    TaintedJSFunctionType,
-    TaintedNumberObjectType,
-    TaintedErrorInstanceType,
-    TaintedPureForwardingProxyType,
-    TaintedImpureProxyType,
-    TaintedWithScopeType,
-    TaintedDirectArgumentsType,
-    TaintedScopedArgumentsType,
-
-    TaintedInt8ArrayType,
-    TaintedInt16ArrayType,
-    TaintedInt32ArrayType,
-    TaintedUint8ArrayType,
-    TaintedUint8ClampedArrayType,
-    TaintedUint16ArrayType,
-    TaintedUint32ArrayType,
-    TaintedFloat32ArrayType,
-    TaintedFloat64ArrayType,
-    TaintedDataViewType,
-
-    TaintedGlobalObjectType,
-    TaintedClosureObjectType,
 };
 
 COMPILE_ASSERT(sizeof(JSType) == sizeof(uint8_t), sizeof_jstype_is_one_byte);

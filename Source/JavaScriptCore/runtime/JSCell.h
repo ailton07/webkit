@@ -95,8 +95,6 @@ public:
     bool inherits(const ClassInfo*) const;
     bool isAPIValueWrapper() const;
 
-    void putTaintType();
-    bool isTainted();
     JSType type() const;
     IndexingType indexingType() const;
     StructureID structureID() const { return m_structureID; }
@@ -116,7 +114,7 @@ public:
     JS_EXPORT_PRIVATE String getString(ExecState*) const; // null string if not a string
     JS_EXPORT_PRIVATE JSObject* getObject(); // NULL if not an object
     const JSObject* getObject() const; // NULL if not an object
-
+        
     // Returns information about how to call/construct this cell as a function/constructor. May tell
     // you that the cell is not callable or constructor (default is that it's not either). If it
     // says that the function is callable, and the TypeOfShouldCallGetCallData type flag is set, and
@@ -145,7 +143,7 @@ public:
     const MethodTable* methodTable(VM&) const;
     static void put(JSCell*, ExecState*, PropertyName, JSValue, PutPropertySlot&);
     static void putByIndex(JSCell*, ExecState*, unsigned propertyName, JSValue, bool shouldThrow);
-
+        
     static bool deleteProperty(JSCell*, ExecState*, PropertyName);
     static bool deletePropertyByIndex(JSCell*, ExecState*, unsigned propertyName);
 
@@ -159,9 +157,9 @@ public:
 
     // The recommended idiom for using cellState() is to switch on it or perform an == comparison on it
     // directly. We deliberately avoid helpers for this, because we want transparency about how the various
-    // CellState values influences our various algorithms.
+    // CellState values influences our various algorithms. 
     CellState cellState() const { return m_cellState; }
-
+    
     void setCellState(CellState data) const { const_cast<JSCell*>(this)->m_cellState = data; }
 
     static ptrdiff_t structureIDOffset()
@@ -229,7 +227,7 @@ inline To jsCast(From* from)
     ASSERT_WITH_SECURITY_IMPLICATION(!from || from->JSCell::inherits(std::remove_pointer<To>::type::info()));
     return static_cast<To>(from);
 }
-
+    
 template<typename To>
 inline To jsCast(JSValue from)
 {

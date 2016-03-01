@@ -20,7 +20,7 @@
  * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
 #ifndef JSCellInlines_h
@@ -138,13 +138,13 @@ void* allocateCell(Heap& heap, size_t size)
     result->clearStructure();
     return result;
 }
-
+    
 template<typename T>
 void* allocateCell(Heap& heap)
 {
     return allocateCell<T>(heap, sizeof(T));
 }
-
+    
 inline bool isZapped(const JSCell* cell)
 {
     return cell->isZapped();
@@ -157,7 +157,7 @@ inline bool JSCell::isObject() const
 
 inline bool JSCell::isString() const
 {
-    return (m_type & StringType) == StringType;
+    return m_type == StringType;
 }
 
 inline bool JSCell::isSymbol() const
@@ -233,7 +233,7 @@ ALWAYS_INLINE JSValue JSCell::fastGetOwnProperty(VM& vm, Structure& structure, P
 
 inline bool JSCell::canUseFastGetOwnProperty(const Structure& structure)
 {
-    return !structure.hasGetterSetterProperties()
+    return !structure.hasGetterSetterProperties() 
         && !structure.hasCustomGetterSetterProperties()
         && !structure.typeInfo().overridesGetOwnPropertySlot();
 }
